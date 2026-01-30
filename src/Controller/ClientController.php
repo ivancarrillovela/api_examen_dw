@@ -4,9 +4,12 @@ namespace App\Controller;
 
 use App\Entity\Client;
 use App\Model\Request\ClientInfoFilterDto;
+use App\Model\Response\ActivityDto;
+use App\Model\Response\BookingDto;
 use App\Model\Response\ClientDto;
-use App\Model\Response\StatisticsByYearDto;
+use App\Model\Response\SongDto;
 use App\Model\Response\StatisticsByTypeDto;
+use App\Model\Response\StatisticsByYearDto;
 use App\Model\Response\StatisticsDto;
 use App\Repository\ClientRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,19 +22,18 @@ class ClientController extends AbstractController
 {
     #[Route('/{id}', methods: ['GET'])]
     public function show(
-        Client $client, // Symfony hace el find() por id automáticamente (ParamConverter)
+        Client $client,
         #[MapQueryString] ?ClientInfoFilterDto $filters,
         ClientRepository $repo
     ): JsonResponse
     {
         $filters = $filters ?? new ClientInfoFilterDto();
 
-        // 1. Estadísticas (Si se piden)
+        // 1. Lógica de Estadísticas (Agrupación por Año y Tipo)
         $statsResponse = [];
         if ($filters->with_statistics) {
             $rawStats = $repo->getStatistics($client->getId());
             
-            // Agrupar por años en PHP
             $groupedByYear = [];
             foreach ($rawStats as $row) {
                 $year = $row['year'];
@@ -39,6 +41,7 @@ class ClientController extends AbstractController
                     $groupedByYear[$year] = [];
                 }
                 
+                // Agrupamos bajo el año correspondiente
                 $groupedByYear[$year][] = new StatisticsByTypeDto(
                     type: $row['type'],
                     statistics: [
@@ -50,20 +53,49 @@ class ClientController extends AbstractController
                 );
             }
 
+            // Convertimos el mapa a una lista de DTOs
             foreach ($groupedByYear as $year => $types) {
                 $statsResponse[] = new StatisticsByYearDto($year, $types);
             }
         }
 
-        // 2. Reservas (Bookings) (Si se piden)
-        // Dejamos el array vacío si no se piden, o implementaríamos lógica similar
-        // Para simplificar y cumplir el examen, asumimos array vacío si false.
+        // 2. Lógica de Reservas (IMPLEMENTACIÓN COMPLETA)
         $bookingsResponse = []; 
         if ($filters->with_bookings) {
-             // Aquí mapearías $client->getBookings() a BookingDto...
-             // (Es similar a lo hecho en otros controllers)
+             foreach ($client->getBookings() as $booking) {
+                $activity = $booking->getActivity();
+
+                // a) Mapear Canciones
+                $songsDtos = [];
+                foreach ($activity->getPlaylist() as $song) {
+                    $songsDtos[] = new SongDto(
+                        id: $song->getId(),
+                        name: $song->getName(),
+                        duration_seconds: $song->getDurationSeconds()
+                    );
+                }
+
+                // b) Mapear Actividad
+                $activityDto = new ActivityDto(
+                    id: $activity->getId(),
+                    max_participants: $activity->getMaxParticipants(),
+                    clients_signed: $activity->getBookings()->count(),
+                    type: $activity->getType(),
+                    play_list: $songsDtos,
+                    date_start: $activity->getDateStart()->format('Y-m-d H:i:s'),
+                    date_end: $activity->getDateEnd()->format('Y-m-d H:i:s')
+                );
+
+                // c) Crear el DTO de Reserva
+                $bookingsResponse[] = new BookingDto(
+                    id: $booking->getId(),
+                    activity: $activityDto,
+                    client_id: $client->getId()
+                );
+             }
         }
 
+        // 3. Respuesta Final
         $response = new ClientDto(
             id: $client->getId(),
             type: $client->getType(),

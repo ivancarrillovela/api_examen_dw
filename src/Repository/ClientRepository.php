@@ -16,17 +16,22 @@ class ClientRepository extends ServiceEntityRepository
         parent::__construct($registry, Client::class);
     }
 
+    /**
+     * Obtiene estadísticas agrupadas por año y tipo de actividad.
+     * Calcula el número total de actividades y la suma de minutos.
+     */
     public function getStatistics(int $clientId): array
     {
         $conn = $this->getEntityManager()->getConnection();
         
-        // En SQL Nativo por que suele ser más limpio para agrupaciones por año y tipo
+        // Usamos SQL Nativo para facilitar las funciones de fecha y agregación
+        // TIMEDIFF devuelve la diferencia, TIME_TO_SEC la pasa a segundos, y dividimos entre 60 para minutos.
         $sql = '
             SELECT 
                 YEAR(a.date_start) as year,
                 a.type,
                 COUNT(a.id) as num_activities,
-                SUM(TIME_TO_SEC(TIMEDIFF(a.date_end, a.date_start)) / 60) as num_minutes
+                COALESCE(SUM(TIME_TO_SEC(TIMEDIFF(a.date_end, a.date_start)) / 60), 0) as num_minutes
             FROM booking b
             JOIN activity a ON b.activity_id = a.id
             WHERE b.client_id = :id
@@ -37,29 +42,4 @@ class ClientRepository extends ServiceEntityRepository
         $resultSet = $conn->executeQuery($sql, ['id' => $clientId]);
         return $resultSet->fetchAllAssociative();
     }
-
-    //    /**
-    //     * @return Client[] Returns an array of Client objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('c')
-    //            ->andWhere('c.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('c.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
-
-    //    public function findOneBySomeField($value): ?Client
-    //    {
-    //        return $this->createQueryBuilder('c')
-    //            ->andWhere('c.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
 }

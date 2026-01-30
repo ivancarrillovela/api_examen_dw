@@ -3,9 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Booking;
-use App\Exception\BookingException;
 use App\Model\Request\BookingNewDto;
-use App\Model\Response\BookingDto;
 use App\Repository\ActivityRepository;
 use App\Repository\BookingRepository;
 use App\Repository\ClientRepository;
@@ -24,33 +22,36 @@ class BookingService
 
     public function createBooking(BookingNewDto $dto): Booking
     {
-        // 1. Validar existencia de Cliente y Actividad
+        // 1. Validar existencia (Devuelve 404 si falla)
         $client = $this->clientRepo->find($dto->client_id);
         $activity = $this->activityRepo->find($dto->activity_id);
 
-        if (!$client) throw new NotFoundHttpException("Cliente no encontrado");
-        if (!$activity) throw new NotFoundHttpException("Actividad no encontrada");
+        if (!$client) {
+            throw new NotFoundHttpException(sprintf('El cliente con ID %d no existe.', $dto->client_id));
+        }
+        if (!$activity) {
+            throw new NotFoundHttpException(sprintf('La actividad con ID %d no existe.', $dto->activity_id));
+        }
 
-        // 2. Validar duplicados (Lógica básica: no apuntarse dos veces)
+        // 2. Validar duplicados (Devuelve 400 si falla)
         if ($this->bookingRepo->hasBooking($client, $activity)) {
-            throw new BadRequestHttpException("El cliente ya está apuntado a esta actividad");
+            throw new BadRequestHttpException('El cliente ya tiene una reserva para esta actividad.');
         }
 
-        // 3. Validar Plazas Suficientes
-        // Nota: Activity tiene colección bookings, pero para ser eficientes confiamos en count()
+        // 3. Validar Plazas (Devuelve 400 si falla)
         if ($activity->getBookings()->count() >= $activity->getMaxParticipants()) {
-            throw new BadRequestHttpException("No quedan plazas libres en esta actividad");
+            throw new BadRequestHttpException('La actividad está completa, no quedan plazas.');
         }
 
-        // 4. Regla de Negocio Premium vs Standard
+        // 4. Regla Standard vs Premium
         if ($client->getType() === 'standard') {
             $reservasSemana = $this->bookingRepo->countBookingsInCurrentWeek($client);
             if ($reservasSemana >= 2) {
-                throw new BadRequestHttpException("Los usuarios Standard solo pueden reservar 2 actividades por semana.");
+                throw new BadRequestHttpException('Los clientes Standard solo pueden realizar 2 reservas por semana.');
             }
         }
 
-        // 5. Crear y Guardar Reserva
+        // 5. Persistir
         $booking = new Booking();
         $booking->setClient($client);
         $booking->setActivity($activity);
