@@ -22,7 +22,7 @@ class BookingService
 
     public function createBooking(BookingNewDto $dto): Booking
     {
-        // 1. Validar existencia (Devuelve 404 si falla)
+        // Validar existencia (Devuelve 404 si falla)
         $client = $this->clientRepo->find($dto->client_id);
         $activity = $this->activityRepo->find($dto->activity_id);
 
@@ -33,17 +33,17 @@ class BookingService
             throw new NotFoundHttpException(sprintf('La actividad con ID %d no existe.', $dto->activity_id));
         }
 
-        // 2. Validar duplicados (Devuelve 400 si falla)
+        // Validar duplicados (Devuelve 400 si falla)
         if ($this->bookingRepo->hasBooking($client, $activity)) {
             throw new BadRequestHttpException('El cliente ya tiene una reserva para esta actividad.');
         }
 
-        // 3. Validar Plazas (Devuelve 400 si falla)
+        // Validar Plazas (Devuelve 400 si falla)
         if ($activity->getBookings()->count() >= $activity->getMaxParticipants()) {
             throw new BadRequestHttpException('La actividad está completa, no quedan plazas.');
         }
 
-        // 4. Regla Standard vs Premium
+        // Regla Standard vs Premium
         if ($client->getType() === 'standard') {
             $reservasSemana = $this->bookingRepo->countBookingsInCurrentWeek($client);
             if ($reservasSemana >= 2) {
@@ -51,7 +51,7 @@ class BookingService
             }
         }
 
-        // 5. Persistir
+        // Persistir
         $booking = new Booking();
         $booking->setClient($client);
         $booking->setActivity($activity);

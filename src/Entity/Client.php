@@ -22,7 +22,7 @@ class Client
     private ?string $email = null;
 
     #[ORM\Column(length: 20)]
-    private ?string $type = null; // 'standard' o 'premium'
+    private ?string $type = null; // 'standard' o 'premium', si existiese un POST para crear usuario crearia un enum para validar el tipo
 
     /**
      * @var Collection<int, Booking>
@@ -76,14 +76,12 @@ class Client
         return $this;
     }
 
-    /**
-     * @return Collection<int, Booking>
-     */
     public function getBookings(): Collection
     {
         return $this->bookings;
     }
 
+    // Añade una reserva a la colección de reservas del cliente
     public function addBooking(Booking $booking): static
     {
         if (!$this->bookings->contains($booking)) {
@@ -94,10 +92,11 @@ class Client
         return $this;
     }
 
+    // Elimina una reserva de la colección de reservas del cliente
     public function removeBooking(Booking $booking): static
     {
         if ($this->bookings->removeElement($booking)) {
-            // set the owning side to null (unless already changed)
+            // Si la reserva está asociada al cliente la desvincula
             if ($booking->getClient() === $this) {
                 $booking->setClient(null);
             }

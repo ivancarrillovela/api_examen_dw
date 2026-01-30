@@ -29,7 +29,7 @@ class ClientController extends AbstractController
     {
         $filters = $filters ?? new ClientInfoFilterDto();
 
-        // 1. Lógica de Estadísticas (Agrupación por Año y Tipo)
+        // Lógica de Estadísticas (Agrupación por Año y Tipo)
         $statsResponse = [];
         if ($filters->with_statistics) {
             $rawStats = $repo->getStatistics($client->getId());
@@ -59,13 +59,13 @@ class ClientController extends AbstractController
             }
         }
 
-        // 2. Lógica de Reservas (IMPLEMENTACIÓN COMPLETA)
+        // Lógica de Reservas
         $bookingsResponse = []; 
         if ($filters->with_bookings) {
              foreach ($client->getBookings() as $booking) {
                 $activity = $booking->getActivity();
 
-                // a) Mapear Canciones
+                // Mapear Canciones
                 $songsDtos = [];
                 foreach ($activity->getPlaylist() as $song) {
                     $songsDtos[] = new SongDto(
@@ -75,7 +75,7 @@ class ClientController extends AbstractController
                     );
                 }
 
-                // b) Mapear Actividad
+                // Mapear Actividad
                 $activityDto = new ActivityDto(
                     id: $activity->getId(),
                     max_participants: $activity->getMaxParticipants(),
@@ -86,7 +86,7 @@ class ClientController extends AbstractController
                     date_end: $activity->getDateEnd()->format('Y-m-d H:i:s')
                 );
 
-                // c) Crear el DTO de Reserva
+                // Crear el DTO de Reserva
                 $bookingsResponse[] = new BookingDto(
                     id: $booking->getId(),
                     activity: $activityDto,
@@ -95,7 +95,7 @@ class ClientController extends AbstractController
              }
         }
 
-        // 3. Respuesta Final
+        // Respuesta Final
         $response = new ClientDto(
             id: $client->getId(),
             type: $client->getType(),

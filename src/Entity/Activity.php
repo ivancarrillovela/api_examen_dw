@@ -99,14 +99,17 @@ class Activity
         return $this;
     }
 
-    /**
-     * @return Collection<int, Song>
-     */
     public function getPlaylist(): Collection
     {
         return $this->playlist;
     }
 
+    public function getBookings(): Collection
+    {
+        return $this->bookings;
+    }
+
+    // Añade una canción a la colección de canciones de la actividad
     public function addPlaylist(Song $playlist): static
     {
         if (!$this->playlist->contains($playlist)) {
@@ -116,11 +119,11 @@ class Activity
 
         return $this;
     }
-
+    // Elimina una canción de la colección de canciones de la actividad
     public function removePlaylist(Song $playlist): static
     {
         if ($this->playlist->removeElement($playlist)) {
-            // set the owning side to null (unless already changed)
+            // Si la canción está asociada a la actividad la desvincula
             if ($playlist->getActivity() === $this) {
                 $playlist->setActivity(null);
             }
@@ -129,14 +132,7 @@ class Activity
         return $this;
     }
 
-    /**
-     * @return Collection<int, Booking>
-     */
-    public function getBookings(): Collection
-    {
-        return $this->bookings;
-    }
-
+    // Añade una reserva a la colección de reservas de la actividad
     public function addBooking(Booking $booking): static
     {
         if (!$this->bookings->contains($booking)) {
@@ -147,10 +143,11 @@ class Activity
         return $this;
     }
 
+    // Elimina una reserva de la colección de reservas de la actividad
     public function removeBooking(Booking $booking): static
     {
         if ($this->bookings->removeElement($booking)) {
-            // set the owning side to null (unless already changed)
+            // Si la reserva está asociada a la actividad la desvincula
             if ($booking->getActivity() === $this) {
                 $booking->setActivity(null);
             }

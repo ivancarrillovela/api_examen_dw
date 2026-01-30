@@ -25,26 +25,26 @@ class ActivityRepository extends ServiceEntityRepository
             ->addSelect('COUNT(b.id) as HIDDEN booking_count') 
             ->groupBy('a.id');
 
-        // 1. Filtro por Tipo
+        // Filtro por Tipo
         if ($filters->type) {
             $qb->andWhere('a.type = :type')
                ->setParameter('type', $filters->type);
         }
 
-        // 2. Filtro "onlyfree"
+        // Filtro "onlyfree"
         if ($filters->onlyfree) {
             // "HAVING" porque filtramos sobre un resultado agregado (COUNT)
             $qb->having('COUNT(b.id) < a.maxParticipants');
         }
 
-        // 3. Ordenación
+        // Ordenación
         $sortField = match($filters->sort) {
             'date' => 'a.dateStart',
             default => 'a.dateStart'
         };
         $qb->orderBy($sortField, $filters->order);
 
-        // 4. Paginación
+        // Paginación
         $qb->setFirstResult(($filters->page - 1) * $filters->page_size)
            ->setMaxResults($filters->page_size);
 

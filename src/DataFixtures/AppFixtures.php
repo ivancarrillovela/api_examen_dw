@@ -13,7 +13,7 @@ class AppFixtures extends Fixture
 {
     public function load(ObjectManager $manager): void
     {
-        // 1. Crear Clientes (Usuarios)
+        // Crear Clientes (Usuarios)
         $clients = [];
         $clientTypes = ['standard', 'premium'];
         
@@ -27,7 +27,7 @@ class AppFixtures extends Fixture
             $clients[] = $client; 
         }
 
-        // 2. Crear Actividades
+        // Crear Actividades
         $activityTypes = ['BodyPump', 'Spinning', 'Core'];
         
         for ($j = 1; $j <= 20; $j++) {
@@ -50,7 +50,7 @@ class AppFixtures extends Fixture
             // Persistimos la actividad ANTES de las canciones para que tenga ID (por seguridad)
             $manager->persist($activity);
 
-            // 3. Añadir Canciones (Playlist)
+            // Añadir Canciones (Playlist)
             $numSongs = rand(3, 5);
             for ($k = 1; $k <= $numSongs; $k++) {
                 $song = new Song();
@@ -65,7 +65,7 @@ class AppFixtures extends Fixture
                 $manager->persist($song);
             }
 
-            // 4. Crear Reservas (Bookings)
+            // Crear Reservas (Bookings)
             // Lógica robusta para no pasarnos de índices
             $maxBookings = min(count($clients), $activity->getMaxParticipants());
             $numBookings = rand(0, $maxBookings);

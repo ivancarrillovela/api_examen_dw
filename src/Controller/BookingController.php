@@ -25,15 +25,16 @@ class BookingController extends AbstractController
         $booking = $service->createBooking($bookingDto);
 
         // Mapeamos a DTO de Salida
-        // Reutilizamos el mapeo de Activity (idealmente extraído a un mapper service pero aquí inline vale)
+        // Reutilizamos el mapeo de Activity
         $activity = $booking->getActivity();
         
-        // Mapeo rápido de canciones (puedes refactorizar si repites código)
+        // Mapeo rápido de canciones
         $songsDtos = [];
         foreach ($activity->getPlaylist() as $song) {
             $songsDtos[] = new SongDto($song->getId(), $song->getName(), $song->getDurationSeconds());
         }
 
+        // Crear el ActivityDto
         $activityDto = new ActivityDto(
             id: $activity->getId(),
             max_participants: $activity->getMaxParticipants(),
@@ -44,12 +45,14 @@ class BookingController extends AbstractController
             date_end: $activity->getDateEnd()->format('Y-m-d H:i:s')
         );
 
+        // Crear el BookingDto
         $response = new BookingDto(
             id: $booking->getId(),
             activity: $activityDto,
             client_id: $booking->getClient()->getId()
         );
 
+        // Devolver la respuesta
         return $this->json($response);
     }
 }

@@ -25,7 +25,7 @@ class ClientRepository extends ServiceEntityRepository
         $conn = $this->getEntityManager()->getConnection();
         
         // Usamos SQL Nativo para facilitar las funciones de fecha y agregación
-        // TIMEDIFF devuelve la diferencia, TIME_TO_SEC la pasa a segundos, y dividimos entre 60 para minutos.
+        // TIMEDIFF devuelve la diferencia, TIME_TO_SEC la pasa a segundos y dividimos entre 60 para minutos.
         $sql = '
             SELECT 
                 YEAR(a.date_start) as year,

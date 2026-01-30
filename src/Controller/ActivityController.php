@@ -26,16 +26,16 @@ class ActivityController extends AbstractController
         // Si no vienen filtros en la URL, inicializamos unos por defecto
         $filters = $filters ?? new ActivityFilterDto();
 
-        // 1. Llamar al Repositorio para buscar con filtros y paginación
+        // Llamar al Repositorio para buscar con filtros y paginación
         $paginator = $repo->findByFilters($filters);
         
-        // 2. Mapeo: Convertir Entidades de Doctrine a DTOs de Salida
+        // Mapeo: Convertir Entidades de Doctrine a DTOs de Salida
         $activityDtos = [];
         
         foreach ($paginator as $activity) {
             /** @var Activity $activity */
             
-            // 2.1 Convertir las canciones de la actividad a SongDto
+            // Convertir las canciones de la actividad a SongDto
             $songsDtos = [];
             foreach ($activity->getPlaylist() as $song) {
                 $songsDtos[] = new SongDto(
@@ -45,7 +45,7 @@ class ActivityController extends AbstractController
                 );
             }
 
-            // 2.2 Crear el ActivityDto (IMPORTANTE: El orden/nombres deben coincidir con tu clase ActivityDto)
+            // Crear el ActivityDto (IMPORTANTE: El orden/nombres deben coincidir con tu clase ActivityDto)
             $activityDtos[] = new ActivityDto(
                 id: $activity->getId(),
                 max_participants: $activity->getMaxParticipants(),
@@ -57,7 +57,7 @@ class ActivityController extends AbstractController
             );
         }
 
-        // 3. Crear los Metadatos de paginación
+        // Crear los Metadatos de paginación
         $totalItems = count($paginator);
         $metaDto = new MetadataDto(
             page: $filters->page,
@@ -65,7 +65,7 @@ class ActivityController extends AbstractController
             total_items: $totalItems
         );
 
-        // 4. Construir la respuesta final
+        // Construir la respuesta final
         $response = new ActivityListDto(
             data: $activityDtos,
             meta: $metaDto

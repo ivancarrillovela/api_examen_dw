@@ -25,6 +25,7 @@ class BookingRepository extends ServiceEntityRepository
         $monday = (clone $today)->modify('monday this week')->setTime(0, 0, 0);
         $sunday = (clone $today)->modify('sunday this week')->setTime(23, 59, 59);
 
+        // Contar reservas del cliente en la semana actual
         return $this->createQueryBuilder('b')
             ->select('count(b.id)')
             ->join('b.activity', 'a') // Unimos con actividad para ver su fecha
@@ -39,6 +40,7 @@ class BookingRepository extends ServiceEntityRepository
 
     public function hasBooking(Client $client, Activity $activity): bool
     {
+        // Verificar si el cliente ya tiene una reserva para esta actividad
         return (bool) $this->createQueryBuilder('b')
             ->select('count(b.id)')
             ->where('b.client = :client')
