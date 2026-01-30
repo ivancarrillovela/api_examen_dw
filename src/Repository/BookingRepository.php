@@ -3,6 +3,8 @@
 namespace App\Repository;
 
 use App\Entity\Booking;
+use App\Entity\Client;
+use App\Entity\Activity;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -14,6 +16,37 @@ class BookingRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Booking::class);
+    }
+
+    public function countBookingsInCurrentWeek(Client $client): int
+    {
+        $today = new \DateTime();
+        // Calcular lunes y domingo de esta semana
+        $monday = (clone $today)->modify('monday this week')->setTime(0, 0, 0);
+        $sunday = (clone $today)->modify('sunday this week')->setTime(23, 59, 59);
+
+        return $this->createQueryBuilder('b')
+            ->select('count(b.id)')
+            ->join('b.activity', 'a') // Unimos con actividad para ver su fecha
+            ->where('b.client = :client')
+            ->andWhere('a.dateStart BETWEEN :start AND :end')
+            ->setParameter('client', $client)
+            ->setParameter('start', $monday)
+            ->setParameter('end', $sunday)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function hasBooking(Client $client, Activity $activity): bool
+    {
+        return (bool) $this->createQueryBuilder('b')
+            ->select('count(b.id)')
+            ->where('b.client = :client')
+            ->andWhere('b.activity = :activity')
+            ->setParameter('client', $client)
+            ->setParameter('activity', $activity)
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 
     //    /**
